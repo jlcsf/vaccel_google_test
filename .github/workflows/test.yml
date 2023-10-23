@@ -1,60 +1,37 @@
-name: Build project
+name: Build and Test
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
-      - main
-
-  workflow_dispatch:
-
+      - main  
+  pull_request:
+    branches:
+      - main 
 jobs:
-  build:
-    runs-on: [self-hosted, "${{ matrix.archconfig }}", gcc, lite ]
-
-    strategy:
-      matrix:
-        archconfig: [ x86_64, aarch64, armv7l ]
-        build_type: [Debug, Release]
-      fail-fast: false
+  build-and-test:
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Cleanup pervious jobs
-      run: |
-        echo "Cleaning up previous runs"
-        sudo rm -rf ${{ github.workspace }}/*
-        sudo rm -rf ${{ github.workspace }}/.??*
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - name: Set up CMake and Build
+        run: |
+          export CXX=g++
+          rm -rf build
+          mkdir -p build
+          cd build
+          cmake ../ -DBUILD_PLUGIN_NOOP=ON -DENABLE_TESTS=ON -DBUILD_EXAMPLES=ON
+          make
+        shell: bash
 
-    - name: Find SHA
-      run: |
-        if [[ "${{github.event.pull_request.head.sha}}" != "" ]]
-        then
-          echo "ARTIFACT_SHA=$(echo ${{github.event.pull_request.head.sha}})" >> $GITHUB_ENV
-          echo "ARTIFACT_NAME=$(echo ${{ github.head_ref || github.ref_name }})" >> $GITHUB_ENV
-        else
-          echo "ARTIFACT_NAME=$(echo ${GITHUB_REF##*/})" >> $GITHUB_ENV
-          echo "ARTIFACT_SHA=$(echo ${{github.sha}})" >> $GITHUB_ENV
-        fi
+      - name: Set Environment Variables
+        run: |
+          export VACCEL_BACKENDS=./plugins/noop/libvaccel-noop.so
+          export VACCEL_DEBUG_LEVEL=4
+        shell: bash
 
-    - name: Build project
-      id: build_vaccelrt
-      run: |
-        mkdir -p build_${{matrix.build_type}}
-        cd build_${{matrix.build_type}}
-        cmake ${{github.workspace}} \
-          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/artifacts/${{matrix.archconfig}}/${{matrix.build_type}}/opt \
-          -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-          -DENABLE_TESTS=ON \
-          -DBUILD_EXAMPLES=ON && \
-        cmake --build . --config ${{matrix.build_type}} && \
-        make test
-
-    - name: Clean-up
-      run: sudo rm -rf artifacts build_${{ matrix.build_type }}
+      - name: Run Tests
+        run: |
+          make test
+        shell: bash
