@@ -55,23 +55,11 @@ target_compile_options(log_tests PUBLIC -Wall -Wextra -g -ggdb)
 target_link_libraries("log_tests" gtest gtest_main dl slog)
 gtest_add_tests(TARGET log_tests LANGUAGE C)
 
-# misc unit test
 
-add_executable(misc_tests test_misc.cpp)
-target_include_directories(misc_tests
-    PRIVATE
-        third-party/slog/src
-        src/include
-        src
-        build
-        fff
-        ${GTEST_INCLUDE_DIRS}
-)
-target_compile_options(misc_tests PRIVATE -Wall -Wextra -g -ggdb)
-target_link_libraries("misc_tests" gtest gtest_main dl slog vaccel)
-gtest_add_tests(TARGET misc_tests LANGUAGE C)
-# new plugins
 
+# new plugins unit tests (TODO)
+
+# new resources unit tests (TODO)
 
 # session system unit test
 
@@ -129,3 +117,21 @@ target_include_directories(
 target_compile_options(fpga_tests PUBLIC -Wall -Wextra -g -ggdb)
 target_link_libraries("fpga_tests" gtest gtest_main dl vaccel vaccel-noop)
 gtest_add_tests(TARGET fpga_tests LANGUAGE C)
+
+
+# misc unit test
+
+set(misc_src "${PROJECT_SOURCE_DIR}/src/misc.c")
+add_executable(
+	misc_tests
+	test_misc.cpp ${misc_src}
+)
+target_include_directories(
+	misc_tests
+	PRIVATE
+	${GTEST_INCLUDE} ${include_dirs}
+	../fff
+)
+target_compile_options(misc_tests PUBLIC -Wall -Wextra -g -ggdb)
+target_link_libraries("misc_tests" gtest_main dl slog vaccel)
+gtest_add_tests(TARGET misc_tests)
