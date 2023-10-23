@@ -25,9 +25,5 @@ jobs:
           export VACCEL_DEBUG_LEVEL=4
           cmake ../ -DBUILD_PLUGIN_NOOP=ON -DENABLE_TESTS=ON -DBUILD_EXAMPLES=ON
           make
-        shell: bash
-
-      - name: Run Tests
-        run: |
           make test
         shell: bash
