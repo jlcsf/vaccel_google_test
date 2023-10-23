@@ -19,3 +19,4 @@ build*
 .cache
 .ccls-cache
 .vscode
+ignoreme.txt

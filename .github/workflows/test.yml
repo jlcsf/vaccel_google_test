@@ -1,0 +1,38 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main  
+  pull_request:
+    branches:
+      - main 
+      
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up CMake and Build
+        run: |
+          export CXX=g++
+          rm -rf build
+          mkdir -p build
+          cd build
+          cmake ../ -DBUILD_PLUGIN_NOOP=ON -DENABLE_TESTS=ON -DBUILD_EXAMPLES=ON
+          make
+        shell: bash
+
+      - name: Set Environment Variables
+        run: |
+          export VACCEL_BACKENDS=./plugins/noop/libvaccel-noop.so
+          export VACCEL_DEBUG_LEVEL=4
+        shell: bash
+
+      - name: Run Tests
+        run: |
+          make test
+        shell: bash

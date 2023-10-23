@@ -15,7 +15,12 @@
 #ifndef __GENID_H__
 #define __GENID_H__
 
-#include <stdatomic.h>
+#ifdef __cplusplus
+    #include <atomic> 
+    using namespace std;
+#else
+    #include <stdatomic.h> 
+#endif
 #include <stdint.h>
 
 #include "include/vaccel_id.h"
