@@ -72,9 +72,13 @@ int resource_new(struct vaccel_resource *res, vaccel_resource_t type,
 {
 	if (!initialized)
 		return VACCEL_EPERM;
+	
+	
 
 	if (!res || type >= VACCEL_RES_MAX)
 		return VACCEL_EINVAL;
+
+	
 
 	/* If we 're working on top of VirtIO, the host side will provide
 	 * us with an id */
@@ -87,8 +91,12 @@ int resource_new(struct vaccel_resource *res, vaccel_resource_t type,
 		res->id = id_pool_get(&id_pool);
 	}
 
+	
+
 	if (res->id <= 0)
 		return VACCEL_EUSERS;
+
+	
 
 	res->type = type;
 	res->data = data;
@@ -97,7 +105,6 @@ int resource_new(struct vaccel_resource *res, vaccel_resource_t type,
 	list_add_tail(&live_resources[0], &res->entry);
 	atomic_init(&res->refcount, 0);
 	res->rundir = NULL;
-
 	return VACCEL_OK;
 }
 

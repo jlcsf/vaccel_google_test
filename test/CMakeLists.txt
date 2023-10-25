@@ -59,7 +59,7 @@ gtest_add_tests(TARGET log_tests LANGUAGE C)
 
 # new plugins unit tests (TODO)
 
-# new resources unit tests (TODO)
+
 
 # session system unit test
 
@@ -135,3 +135,20 @@ target_include_directories(
 target_compile_options(misc_tests PUBLIC -Wall -Wextra -g -ggdb)
 target_link_libraries("misc_tests" gtest_main dl slog vaccel)
 gtest_add_tests(TARGET misc_tests)
+
+# new resources unit tests (TODO)
+
+set(resources_src "${PROJECT_SOURCE_DIR}/src/resources.c")
+add_executable(
+	resources_tests
+	test_resources.cpp ${resources_src}
+)
+target_include_directories(
+	resources_tests
+	PRIVATE
+	${GTEST_INCLUDE} ${include_dirs}
+	../fff
+)
+target_compile_options(resources_tests PUBLIC -Wall -Wextra -g -ggdb)
+target_link_libraries("resources_tests" gtest_main dl slog vaccel)
+gtest_add_tests(TARGET resources_tests)
