@@ -6,6 +6,7 @@ lcov --remove ./code_coverage.info '/usr/include/c++/12/*' '/usr/include/x86_64-
 genhtml code_coverage_filtered.info  --output-directory ./code_coverage_google/
 
 mv ./code_coverage_google/* ../coverage_gtest/
+rm ./code_coverage_google/ -rf
 
 rm code_coverage.info
 rm code_coverage_filtered.info
