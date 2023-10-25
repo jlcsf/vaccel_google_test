@@ -20,3 +20,5 @@ build*
 .ccls-cache
 .vscode
 ignoreme.txt
+.info
+code_coverage_google

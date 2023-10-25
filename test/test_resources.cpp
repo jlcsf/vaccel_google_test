@@ -61,7 +61,7 @@ TEST_F(ResourcesNew, destroy_OK) {
     EXPECT_EQ(ret, VACCEL_OK);
 }
 
-TEST_F(ResourcesNew, destroy_not_init) {
+TEST(Resources, destroy_not_init) {
     // initialized = false;
     // int ret = resource_destroy(&res);
     // EXPECT_EQ(ret, VACCEL_EPERM);
@@ -73,6 +73,9 @@ TEST_F(ResourcesNew, destroy_not_init) {
 TEST_F(ResourcesNew, destory_no_res){
     int ret = resource_destroy(NULL);
     EXPECT_EQ(ret, VACCEL_EINVAL);
+
+    ret = resource_destroy(&res);
+    EXPECT_EQ(ret, VACCEL_OK);
 }
 
 TEST_F(ResourcesNew, create_rundir){
