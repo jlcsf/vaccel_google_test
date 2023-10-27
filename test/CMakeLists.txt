@@ -30,7 +30,7 @@ target_include_directories(
 )
 target_compile_options(id_pool_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("id_pool_tests" gtest gtest_main dl slog --coverage gcov)
-gtest_add_tests(TARGET id_pool_tests LANGUAGE C)
+
 
 # log unit test
 
@@ -46,7 +46,7 @@ target_include_directories(
 )
 target_compile_options(log_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("log_tests" gtest gtest_main dl slog --coverage gcov)
-gtest_add_tests(TARGET log_tests LANGUAGE C)
+
 
 
 
@@ -69,7 +69,6 @@ target_include_directories(
 )
 target_compile_options(session_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("session_tests" gtest_main dl slog vaccel --coverage gcov)
-gtest_add_tests(TARGET session_tests)
 
 # vaccel system unit test
 
@@ -87,7 +86,7 @@ target_include_directories(
 )
 target_compile_options(vaccel_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("vaccel_tests" gtest gtest_main dl vaccel --coverage gcov)
-gtest_add_tests(TARGET vaccel_tests LANGUAGE C)
+
 
 
 # fpga unit test (NOOP plugin)
@@ -107,7 +106,7 @@ target_include_directories(
 )
 target_compile_options(fpga_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("fpga_tests" gtest gtest_main dl vaccel vaccel-noop --coverage gcov) 
-gtest_add_tests(TARGET fpga_tests LANGUAGE C)
+
 
 
 # misc unit test
@@ -125,7 +124,6 @@ target_include_directories(
 )
 target_compile_options(misc_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("misc_tests" gtest_main dl slog vaccel --coverage gcov)
-gtest_add_tests(TARGET misc_tests)
 
 # new resources unit tests (TODO)
 
@@ -142,7 +140,6 @@ target_include_directories(
 )
 target_compile_options(resources_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("resources_tests" gtest_main dl slog vaccel --coverage gcov)
-gtest_add_tests(TARGET resources_tests)
 
 # plugin system unit test
 set(plugin_src "${PROJECT_SOURCE_DIR}/src/plugin.c")
@@ -157,4 +154,13 @@ target_include_directories(
 )
 target_compile_options(plugin_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("plugin_tests" gtest_main dl slog --coverage gcov)
+
+
+gtest_add_tests(TARGET resources_tests)
+gtest_add_tests(TARGET session_tests)
+gtest_add_tests(TARGET id_pool_tests LANGUAGE C)
+gtest_add_tests(TARGET log_tests LANGUAGE C)
+gtest_add_tests(TARGET misc_tests)
 gtest_add_tests(TARGET plugin_tests)
+gtest_add_tests(TARGET fpga_tests LANGUAGE C)
+gtest_add_tests(TARGET vaccel_tests LANGUAGE C)

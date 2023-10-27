@@ -238,3 +238,87 @@ TEST_F(PluginTestsRegisterFunction, valid_registeration) {
     test_op.owner = plugin_test;
     ASSERT_EQ(register_plugin_function(&test_op), VACCEL_OK);
 }
+
+static int no_op() {
+    return 1;
+}
+
+struct vaccel_op no_op_operation = {
+    .type = VACCEL_NO_OP,
+    .func = (void *)no_op,
+    .owner = nullptr,
+};
+
+class PluginTestsRegisterOperation : public ::testing::Test {
+    static int fini(void) {
+        return VACCEL_OK;
+    }
+
+    static int init(void) {
+        return VACCEL_OK;
+    }
+
+protected:
+    struct vaccel_plugin no_op_plugin = {0};
+    struct vaccel_plugin_info noop_pinfo = {0};
+
+    void SetUp() override {
+        no_op_plugin.info = &noop_pinfo;
+        no_op_plugin.info->name = pname;
+        list_init_entry(&no_op_plugin.entry);
+        list_init_entry(&no_op_plugin.ops);
+        no_op_plugin.info->init = init;
+        no_op_plugin.info->fini = fini;
+
+        plugins_bootstrap();
+
+        register_plugin(&no_op_plugin);
+
+        no_op_operation.owner = &no_op_plugin;
+        register_plugin_function(&no_op_operation);
+    }
+
+    void TearDown() override {
+        plugins_shutdown();
+    }
+};
+
+TEST_F(PluginTestsRegisterOperation, check_plugin_loaded_operation) {
+    void* operation = get_plugin_op(VACCEL_NO_OP, 0);
+    ASSERT_NE(operation, nullptr);
+
+    int result = reinterpret_cast<int (*)(void)>(operation)();
+    ASSERT_EQ(result, 1);
+}
+
+
+// TEST(PluginTests, check_plugin_loaded_operation) {
+
+// 	int ret;
+// 	ret = plugins_bootstrap();
+
+// 	ASSERT_EQ(ret, VACCEL_OK);
+
+// 	void* dl_handle = dlopen("../plugins/noop/libvaccel-noop.so", RTLD_LAZY);
+// 	if (!dl_handle) {
+// 		FAIL() << "Error loading plugin library: " << dlerror();
+// 	}
+
+// 	void* plugin_symbol = dlsym(dl_handle, "vaccel_plugin");
+// 	if (!plugin_symbol) {
+// 		FAIL() << "Error loading vaccel_plugin symbol from the library: " << dlerror();
+// 	}
+// 	struct vaccel_plugin* plugin_test;
+// 	plugin_test = static_cast<struct vaccel_plugin*>(plugin_symbol);
+
+// 	ret = register_plugin(plugin_test);
+
+// 	ASSERT_EQ(ret, VACCEL_OK);
+
+
+// 	ret = register_plugin(plugin_test_noop);
+
+//     enum vaccel_op_type op_type = VACCEL_NO_OP;
+//     void* operation = get_plugin_op(op_type, 0);
+//     ASSERT_NE(operation, nullptr);
+// }
