@@ -111,7 +111,7 @@ set(ENV{VACCEL_BACKENDS} "${CMAKE_BINARY_DIR}/plugins/noop/libvaccel-noop.so")
 set(fpga_src "${PROJECT_SOURCE_DIR}/src/ops/fpga.c")
 add_executable(
 	fpga_tests
-	test_fpga.cpp
+	test_fpga.cpp ${fpga_src}
 )
 target_include_directories(
 	fpga_tests
