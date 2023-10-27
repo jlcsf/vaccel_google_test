@@ -243,11 +243,21 @@ static int no_op() {
     return 1;
 }
 
+static int no_op_exec() {
+    return 2;
+}
+
+static int no_op_fpga() {
+    return 3;
+}
+
 struct vaccel_op no_op_operation = {
     .type = VACCEL_NO_OP,
     .func = (void *)no_op,
     .owner = nullptr,
 };
+
+
 
 class PluginTestsRegisterOperation : public ::testing::Test {
     static int fini(void) {
@@ -272,9 +282,10 @@ protected:
 
         plugins_bootstrap();
 
-        register_plugin(&no_op_plugin);
-
-        no_op_operation.owner = &no_op_plugin;
+		no_op_operation.owner = &no_op_plugin;
+        
+		register_plugin(&no_op_plugin);
+		
         register_plugin_function(&no_op_operation);
     }
 
@@ -283,14 +294,115 @@ protected:
     }
 };
 
-TEST_F(PluginTestsRegisterOperation, check_plugin_loaded_operation) {
+class PluginTestsRegisterOperationMultiple : public ::testing::Test {
+    static int fini(void) {
+        return VACCEL_OK;
+    }
+
+    static int init(void) {
+        return VACCEL_OK;
+    }
+
+protected:
+    struct vaccel_plugin no_op_plugin = {0};
+    struct vaccel_plugin_info noop_pinfo = {0};
+
+	struct vaccel_op exec_operation = {
+		.type = VACCEL_EXEC,
+		.func = (void *)no_op_exec,
+		.owner = &no_op_plugin,
+	};
+
+	struct vaccel_op copy_operation = {
+		.type = VACCEL_F_ARRAYCOPY,
+		.func = (void *)no_op_fpga,
+		.owner = &no_op_plugin,
+	};
+	struct vaccel_op array_ops[2] = {exec_operation, copy_operation};
+
+    void SetUp() override {
+		int ret;
+        no_op_plugin.info = &noop_pinfo;
+        no_op_plugin.info->name = pname;
+        list_init_entry(&no_op_plugin.entry);
+        list_init_entry(&no_op_plugin.ops);
+        no_op_plugin.info->init = init;
+        no_op_plugin.info->fini = fini;
+
+        plugins_bootstrap();
+
+		ret = register_plugin(&no_op_plugin);
+		ASSERT_EQ(ret, VACCEL_OK);
+
+		ret = register_plugin_functions(array_ops, (sizeof(array_ops) / sizeof(array_ops[0])));
+		ASSERT_EQ(ret, VACCEL_OK);	
+
+    }
+
+    void TearDown() override {
+        plugins_shutdown();
+    }
+};
+
+TEST_F(PluginTestsRegisterOperation, fetch_operation) {
     void* operation = get_plugin_op(VACCEL_NO_OP, 0);
     ASSERT_NE(operation, nullptr);
 
-    int result = reinterpret_cast<int (*)(void)>(operation)();
-    ASSERT_EQ(result, 1);
+    int ret = reinterpret_cast<int (*)(void)>(operation)();
+    ASSERT_EQ(ret, 1);
 }
 
+TEST_F(PluginTestsRegisterOperation, fetch_operation_unknown_function) {
+	enum vaccel_op_type unknown_function = static_cast<enum vaccel_op_type>(VACCEL_FUNCTIONS_NR + 1);
+    void* operation = get_plugin_op(unknown_function, 0);
+    ASSERT_EQ(operation, nullptr);
+}
+
+TEST_F(PluginTestsRegisterOperation, fetch_operation_not_implemented) {
+    void* operation = get_plugin_op(VACCEL_BLAS_SGEMM, 0);
+    ASSERT_EQ(operation, nullptr);
+}
+
+TEST_F(PluginTestsRegisterOperationMultiple, fetch_operation_env_prio) {
+    // we have implemented FPGA in our fixture and lets assume our plugin only implements FPGA functions
+	noop_pinfo.type = VACCEL_PLUGIN_FPGA;
+
+	void* operation = get_plugin_op(VACCEL_F_ARRAYCOPY, VACCEL_PLUGIN_FPGA);
+    ASSERT_NE(operation, nullptr);
+
+    int ret = reinterpret_cast<int (*)(void)>(operation)();
+    ASSERT_EQ(ret, 3);
+}
+
+TEST_F(PluginTestsRegisterOperation, find_noop) {
+
+	int ret = get_available_plugins(VACCEL_NO_OP);
+	ASSERT_EQ(ret,VACCEL_OK);
+}
+
+TEST_F(PluginTestsRegisterOperation, implementation_not_found) {
+
+	int ret = get_available_plugins(VACCEL_EXEC);
+	ASSERT_EQ(ret,VACCEL_OK);
+}
+
+TEST_F(PluginTestsRegisterOperationMultiple, mult_operations){
+
+	void* operation ;
+	int ret;
+
+	operation = get_plugin_op(VACCEL_EXEC, 0);
+    ASSERT_NE(operation, nullptr);
+    ret = reinterpret_cast<int (*)(void)>(operation)();
+    ASSERT_EQ(ret, 2);
+
+	operation = get_plugin_op(VACCEL_F_ARRAYCOPY, 0);
+    ASSERT_NE(operation, nullptr);
+    ret = reinterpret_cast<int (*)(void)>(operation)();
+    ASSERT_EQ(ret, 3);
+	
+
+}
 
 // TEST(PluginTests, check_plugin_loaded_operation) {
 
