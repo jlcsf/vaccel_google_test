@@ -119,7 +119,7 @@ int unregister_plugin(struct vaccel_plugin *plugin)
 		return VACCEL_EINVAL;
 
 	if (!entry_linked(&plugin->entry)) {
-		assert(0 && "Trying to unregister unknown plugin");
+		//assert(0 && "Trying to unregister unknown plugin");
 		return VACCEL_ENOENT;
 	}
 
@@ -157,13 +157,13 @@ int register_plugin_function(struct vaccel_op *plugin_op)
 
 	if (plugin_op->type >= VACCEL_FUNCTIONS_NR) {
 		vaccel_error("Unknown function type");
-		return VACCEL_EINVAL;
+		return VACCEL_EINVAL + 1;
 	}
 
 	struct vaccel_plugin *plugin = plugin_op->owner;
 	if (!plugin) {
 		vaccel_error("Unknown plugin");
-		return VACCEL_EINVAL;
+		return VACCEL_EINVAL + 2;
 	}
 
 	list_add_tail(&plugin->ops, &plugin_op->plugin_entry);

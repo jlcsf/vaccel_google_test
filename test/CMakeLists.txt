@@ -14,20 +14,7 @@ SET(GCC_COVERAGE_LINK_FLAGS "-lgcov")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}") 
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}") 
 
-# plugin system unit test
-set(plugin_src "${PROJECT_SOURCE_DIR}/src/plugin.c")
-add_executable(
-	plugin_tests
-	test_plugin.cpp ${plugin_src}
-)
-target_include_directories(
-	plugin_tests
-	PRIVATE
-	${GTEST_INCLUDE} ${include_dirs}
-)
-target_compile_options(plugin_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
-target_link_libraries("plugin_tests" gtest_main dl slog --coverage gcov)
-gtest_add_tests(TARGET plugin_tests)
+
 
 # test_id unit test
 
@@ -105,8 +92,6 @@ gtest_add_tests(TARGET vaccel_tests LANGUAGE C)
 
 # fpga unit test (NOOP plugin)
 
-
-
 set(ENV{VACCEL_BACKENDS} "${CMAKE_BINARY_DIR}/plugins/noop/libvaccel-noop.so")
 set(fpga_src "${PROJECT_SOURCE_DIR}/src/ops/fpga.c")
 add_executable(
@@ -158,3 +143,18 @@ target_include_directories(
 target_compile_options(resources_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
 target_link_libraries("resources_tests" gtest_main dl slog vaccel --coverage gcov)
 gtest_add_tests(TARGET resources_tests)
+
+# plugin system unit test
+set(plugin_src "${PROJECT_SOURCE_DIR}/src/plugin.c")
+add_executable(
+	plugin_tests
+	test_plugin.cpp ${plugin_src}
+)
+target_include_directories(
+	plugin_tests
+	PRIVATE
+	${GTEST_INCLUDE} ${include_dirs}
+)
+target_compile_options(plugin_tests PUBLIC -Wall -Wextra -g -ggdb --coverage)
+target_link_libraries("plugin_tests" gtest_main dl slog --coverage gcov)
+gtest_add_tests(TARGET plugin_tests)
