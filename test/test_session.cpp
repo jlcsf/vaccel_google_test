@@ -52,36 +52,52 @@ protected:
         sessions_bootstrap();
     }
 
-    void TearDown() override {
-        // sessions_cleanup();
+    void TearDown() {
+        sessions_cleanup();
+        
+        sessions_bootstrap(); // gtest doing double frees... temp fix I guess.
     }
 };
 
-TEST_F(SessionTest, SessInit) {
+TEST_F(SessionTest, sess_init) {
     struct vaccel_session sess;
     int result = vaccel_sess_init(&sess, 1);
     EXPECT_EQ(result, VACCEL_OK);
 }
 
-TEST_F(SessionTest, SessUpdate) {
+TEST_F(SessionTest, sess_null) {
+    int result = vaccel_sess_init(NULL, 1);
+    EXPECT_EQ(result, VACCEL_EINVAL);
+}
+
+
+TEST_F(SessionTest, sess_update) {
     struct vaccel_session sess;
     int result = vaccel_sess_init(&sess, 1);
     ASSERT_EQ(result, VACCEL_OK);
 
     result = vaccel_sess_update(&sess, 2);
     EXPECT_EQ(result, VACCEL_OK);
+
+    result = vaccel_sess_update(NULL, 2);
+    EXPECT_EQ(result, VACCEL_EINVAL);
 }
 
-TEST_F(SessionTest, SessFree) {
+
+
+TEST_F(SessionTest, sess_free) {
     struct vaccel_session sess;
     int result = vaccel_sess_init(&sess, 1);
     ASSERT_EQ(result, VACCEL_OK);
 
     result = vaccel_sess_free(&sess);
     EXPECT_EQ(result, VACCEL_OK);
+
+    result = vaccel_sess_free(NULL);
+    EXPECT_EQ(result, VACCEL_EINVAL);
 }
 
-TEST_F(SessionTest, SessRegister) {
+TEST_F(SessionTest, sess_register) {
     struct vaccel_session sess;
     int result = vaccel_sess_init(&sess, 1);
     ASSERT_EQ(result, VACCEL_OK);
@@ -91,9 +107,21 @@ TEST_F(SessionTest, SessRegister) {
 
     result = vaccel_sess_register(&sess, &res);
     EXPECT_EQ(result, VACCEL_OK);
+
+    result = vaccel_sess_register(NULL, &res);
+    EXPECT_EQ(result, VACCEL_EINVAL);
+
+    result = vaccel_sess_register(&sess, NULL);
+    EXPECT_EQ(result, VACCEL_EINVAL);
+
+    res.type = VACCEL_RES_MAX;
+    result = vaccel_sess_register(&sess, &res);
+    EXPECT_EQ(result, VACCEL_EINVAL);
+
+    res.type = VACCEL_RES_SHARED_OBJ;
 }
 
-TEST_F(SessionTest, SessUnregister) {
+TEST_F(SessionTest, sess_unregister) {
     struct vaccel_session sess;
     int result = vaccel_sess_init(&sess, 1);
     ASSERT_EQ(result, VACCEL_OK);
@@ -103,12 +131,52 @@ TEST_F(SessionTest, SessUnregister) {
 
     result = vaccel_sess_register(&sess, &res);
     ASSERT_EQ(result, VACCEL_OK);
+
+    bool check_bool = vaccel_sess_has_resource(&sess, &res);
+    ASSERT_EQ(check_bool, true);
 
     result = vaccel_sess_unregister(&sess, &res);
     EXPECT_EQ(result, VACCEL_OK);
+
+    check_bool = vaccel_sess_has_resource(&sess, &res);
+    ASSERT_EQ(check_bool, false);
 }
 
-TEST_F(SessionTest, SessVirtio) {
+
+TEST_F(SessionTest, sess_unregister_null) {
+    struct vaccel_session sess;
+    int result = vaccel_sess_init(&sess, 1);
+    ASSERT_EQ(result, VACCEL_OK);
+
+    struct vaccel_resource res;
+    res.type = VACCEL_RES_SHARED_OBJ;
+
+    result = vaccel_sess_register(&sess, &res);
+    ASSERT_EQ(result, VACCEL_OK);
+
+    bool check_bool = vaccel_sess_has_resource(&sess, &res);
+    ASSERT_EQ(check_bool, true);
+
+    result = vaccel_sess_unregister(NULL, &res);
+    ASSERT_EQ(result, VACCEL_EINVAL);
+
+    result = vaccel_sess_unregister(&sess, NULL);
+    ASSERT_EQ(result, VACCEL_EINVAL);
+
+    res.type = VACCEL_RES_MAX;
+    result = vaccel_sess_unregister(&sess, &res);
+    ASSERT_EQ(result, VACCEL_EINVAL);
+
+    res.type = VACCEL_RES_SHARED_OBJ;
+    result = vaccel_sess_unregister(&sess, &res);
+    ASSERT_EQ(result, VACCEL_OK);
+
+    check_bool = vaccel_sess_has_resource(&sess, &res);
+    ASSERT_EQ(check_bool, false);
+
+}
+
+TEST_F(SessionTest, sess_viritio) {
     struct vaccel_session sess;
     int result = vaccel_sess_init(&sess, 1);
     ASSERT_EQ(result, VACCEL_OK);
@@ -145,9 +213,4 @@ TEST_F(SessionTest, SessVirtio) {
     EXPECT_EQ(result, VACCEL_OK);
 
     EXPECT_EQ(get_virtio_plugin_fake.call_count, 4);
-}
-
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
 }
